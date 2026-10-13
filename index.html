@@ -1,7 +1,242 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#172e29"><meta name="description" content="A dedicated workspace for expressive fingerstyle guitar. Write standard notation and tablature, shape each articulation, and hear your ideas."><title>Atelier · Fingerstyle Studio</title><link rel="stylesheet" href="style.css"><script defer src="vexflow.js"></script><script defer src="jspdf.umd.min.js"></script><script defer src="svg2pdf.umd.min.js"></script><script defer src="app.js"></script></head><body>
-<header class="app-header"><a class="brand" href="#" aria-label="Atelier home"><span class="brand-icon">a<span>⁓</span></span><span>atelier<span class="brand-caption">FINGERSTYLE STUDIO</span></span></a><div class="document-info"><span class="document-title">Untitled composition</span><span id="save-status"><i></i> Saved on this device</span></div><div class="header-actions"><button class="icon-btn" id="undo" title="Undo (Ctrl/⌘ Z)" aria-label="Undo">↶</button><button class="icon-btn" id="redo" title="Redo (Ctrl/⌘ Shift Z)" aria-label="Redo">↷</button><button class="quiet" id="help">? <span>Guide</span></button><button class="quiet" id="file-menu">File <span>⌄</span></button><button class="primary" id="export">Export <span>↗</span></button></div></header>
-<div class="workspace"><aside class="outline"><div class="eyebrow">YOUR COMPOSITION</div><button class="outline-tab active" id="score-mode"><span>▤</span> Score <span class="small-pill">6 strings</span></button><div class="outline-heading"><span>SECTIONS</span><button id="add-section" title="Add a new section" aria-label="Add section">＋</button></div><nav id="sections"></nav><button class="new-bar" id="add-bar">＋ Add measure</button><div class="outline-bottom"><div class="tiny-strings">╱ ╱ ╱ ╱ ╱ ╱</div><h3>Every touch matters.</h3><p>From the lightest harmonic to the deepest wrist thump.</p><button id="legend-btn">Technique reference ↗</button></div></aside>
-<main><div class="workspace-title"><div><span class="eyebrow">COMPOSE / GUITAR</span><h1>A little space to make music.</h1></div><button id="inspector-toggle" class="quiet">☷ Inspector</button></div><div class="toolbar"><div class="tool-group" id="durations" aria-label="Note duration"></div><div class="divider"></div><button id="dot" title="Dotted note">•</button><select id="tuplet" title="Tuplet ratio" aria-label="Tuplet ratio"><option value="1:1">Straight</option><option value="3:2">3 · Triplet</option><option value="5:4">5 · Quintuplet</option><option value="6:4">6 · Sextuplet</option><option value="7:4">7 · Septuplet</option><option value="9:8">9 · Nonuplet</option></select><div class="divider"></div><button id="insert-note" title="Insert a new beat after the selected beat">＋ Note</button><button id="insert-rest" title="Insert a rest">𝄽 Rest</button><button id="delete-event" title="Delete selected beat" aria-label="Delete selected beat">⌫</button><div class="toolbar-end"><button id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button id="zoom-in" aria-label="Zoom in">＋</button></div></div><div class="score-scroll" id="score-scroll"><article class="paper" id="paper"><div class="score-heading"><div class="score-kicker">A T E L I E R &nbsp; / &nbsp; A C O U S T I C &nbsp; S T U D I E S</div><h2 id="score-title"></h2><div id="score-subtitle"></div><div class="score-metadata"><span id="score-tuning"></span><span id="score-composer"></span></div></div><div id="score"></div><div class="score-footnote">SB · slap bass &nbsp; NA · nail attack &nbsp; WT · wrist thump &nbsp; LH / RH · tapping &nbsp; NH / AH / PH / TH · harmonics &nbsp; nat. · natural guitar &nbsp; gtr. · guitar tone override &nbsp; bow · bowed override<br><span>Guitar notation sounds one octave below written pitch. Harmonics show the sounding pitch, written one octave higher.</span></div></article><div class="entry-hint"><span>TIP</span> Click a fret to edit. Use ← → to move, ↑ ↓ to change strings, and type a fret number.</div></div></main>
-<aside class="inspector" id="inspector"><div class="inspector-head"><span>THE DETAILS</span><button id="close-inspector" aria-label="Close inspector">×</button></div><div class="inspector-tabs"><button class="active" data-panel="note">Note</button><button data-panel="measure">Measure</button><button data-panel="setup">Guitar</button></div><div id="inspector-content"></div></aside></div>
-<footer class="transport"><div class="transport-left"><span class="green-dot"></span><span id="position">Measure 1 · Beat 1</span></div><div class="transport-center"><button id="rewind" title="Play from beginning" aria-label="Return to beginning">⏮</button><button id="play" class="play" title="Play / stop (Space)" aria-label="Play">▶</button><button id="loop" title="Loop selected section" aria-label="Loop selected section">↻</button><span class="transport-divider"></span><label class="tempo-control"><input id="tempo" type="number" min="20" max="300" value="88" aria-label="Base tempo"> <span>BPM</span></label><button id="metronome" title="Toggle metronome" aria-label="Toggle metronome">♩</button></div><div class="transport-right"><select id="master-tone" aria-label="Default instrument tone"><option value="steel">Steel-string acoustic</option><option value="nylon">Nylon-string classical</option><option value="warm">Warm fingerstyle</option><option value="bright">Bright acoustic</option><option value="bow">Bowed strings</option></select><label title="Master volume"><span>◖</span><input id="volume" type="range" min="0" max="100" value="70" aria-label="Master volume"></label></div></footer>
-<dialog id="modal"><div class="modal-header"><h2 id="modal-title"></h2><button id="modal-close" aria-label="Close dialog">×</button></div><div id="modal-body"></div></dialog><input hidden type="file" accept=".json,.atelier" id="import-file"><div class="toast" id="toast" role="status"></div></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#172e29" />
+    <meta
+      name="description"
+      content="A dedicated workspace for expressive fingerstyle guitar. Write standard notation and tablature, shape each articulation, and hear your ideas."
+    />
+    <title>Atelier · Fingerstyle Studio</title>
+    <link rel="stylesheet" href="style.css" />
+    <script defer src="vexflow.js"></script>
+    <script defer src="jspdf.umd.min.js"></script>
+    <script defer src="svg2pdf.umd.min.js"></script>
+    <script defer src="studio.js"></script>
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="#" aria-label="Atelier home"
+        ><span class="brand-icon">a<span>⁓</span></span
+        ><span
+          >atelier<span class="brand-caption">FINGERSTYLE STUDIO</span></span
+        ></a
+      >
+      <div class="document-info">
+        <span class="document-title">Untitled composition</span
+        ><span id="save-status"><i></i> Saved on this device</span>
+      </div>
+      <div class="header-actions">
+        <button
+          class="icon-btn"
+          id="undo"
+          title="Undo (Ctrl/⌘ Z)"
+          aria-label="Undo"
+        >
+          ↶</button
+        ><button
+          class="icon-btn"
+          id="redo"
+          title="Redo (Ctrl/⌘ Shift Z)"
+          aria-label="Redo"
+        >
+          ↷</button
+        ><button class="quiet" id="help">? <span>Guide</span></button
+        ><button class="quiet" id="file-menu">File <span>⌄</span></button
+        ><button class="primary" id="export">Export <span>↗</span></button>
+      </div>
+    </header>
+    <div class="workspace">
+      <aside class="outline">
+        <div class="eyebrow">YOUR COMPOSITION</div>
+        <button class="outline-tab active" id="score-mode">
+          <span>▤</span> Score <span class="small-pill">6 strings</span>
+        </button>
+        <div class="outline-heading">
+          <span>SECTIONS</span
+          ><button
+            id="add-section"
+            title="Add a new section"
+            aria-label="Add section"
+          >
+            ＋
+          </button>
+        </div>
+        <nav id="sections"></nav>
+        <button class="new-bar" id="add-bar">＋ Add measure</button>
+        <div class="outline-bottom">
+          <div class="tiny-strings">╱ ╱ ╱ ╱ ╱ ╱</div>
+          <h3>Every touch matters.</h3>
+          <p>From the lightest harmonic to the deepest wrist thump.</p>
+          <button id="legend-btn">Technique reference ↗</button>
+        </div>
+      </aside>
+      <main>
+        <div class="workspace-title">
+          <div>
+            <span class="eyebrow">COMPOSE / GUITAR</span>
+            <h1>Your score, in detail.</h1>
+          </div>
+          <button id="inspector-toggle" class="quiet">☷ Inspector</button>
+        </div>
+        <div class="toolbar">
+          <div
+            class="tool-group"
+            id="durations"
+            aria-label="Note duration"
+          ></div>
+          <div class="divider"></div>
+          <button id="dot" title="Dotted note">•</button
+          ><select id="tuplet" title="Tuplet ratio" aria-label="Tuplet ratio">
+            <option value="1:1">Straight</option>
+            <option value="3:2">3 · Triplet</option>
+            <option value="5:4">5 · Quintuplet</option>
+            <option value="6:4">6 · Sextuplet</option>
+            <option value="7:4">7 · Septuplet</option>
+            <option value="9:8">9 · Nonuplet</option>
+          </select>
+          <div class="divider"></div>
+          <button
+            id="insert-note"
+            title="Insert a new beat after the selected beat"
+          >
+            ＋ Note</button
+          ><button id="insert-rest" title="Insert a rest">𝄽 Rest</button
+          ><button
+            id="tie-notes"
+            title="Extend previous notes into selected empty strings (T)"
+          >
+            Tie</button
+          ><button
+            id="delete-event"
+            title="Delete selected beat"
+            aria-label="Delete selected beat"
+          >
+            ⌫
+          </button>
+          <div class="toolbar-end">
+            <button id="zoom-out" aria-label="Zoom out">−</button
+            ><span id="zoom-label">100%</span
+            ><button id="zoom-in" aria-label="Zoom in">＋</button>
+          </div>
+        </div>
+        <div class="score-scroll" id="score-scroll">
+          <article class="paper" id="paper">
+            <div class="score-heading">
+              <div class="score-kicker">
+                A T E L I E R &nbsp; / &nbsp; A C O U S T I C &nbsp; S T U D I E
+                S
+              </div>
+              <h2 id="score-title"></h2>
+              <div id="score-subtitle"></div>
+              <div class="score-metadata">
+                <span id="score-tuning"></span><span id="score-composer"></span>
+              </div>
+            </div>
+            <div id="score"></div>
+            <div class="score-footnote">
+              SB · slap bass &nbsp; NA · nail attack &nbsp; WT · wrist thump
+              &nbsp; LH / RH · tapping &nbsp; NH / AH / PH / TH · harmonics
+              &nbsp; nat. · natural guitar &nbsp; gtr. · guitar tone override
+              &nbsp; bow · bowed override<br /><span
+                >Guitar notation sounds one octave below written pitch.
+                Harmonics show the sounding pitch, written one octave
+                higher.</span
+              >
+            </div>
+          </article>
+          <div class="entry-hint">
+            <span>TIP</span> Click a fret to edit. Use ← → to move, ↑ ↓ to
+            change strings, and type a fret number.
+          </div>
+        </div>
+      </main>
+      <aside class="inspector" id="inspector">
+        <div class="inspector-head">
+          <span>THE DETAILS</span
+          ><button id="close-inspector" aria-label="Close inspector">×</button>
+        </div>
+        <div class="inspector-tabs">
+          <button class="active" data-panel="note">Note</button
+          ><button data-panel="measure">Measure</button
+          ><button data-panel="setup">Guitar</button>
+        </div>
+        <div id="inspector-content"></div>
+      </aside>
+    </div>
+    <footer class="transport">
+      <div class="transport-left">
+        <span class="green-dot"></span
+        ><span id="position">Measure 1 · Beat 1</span>
+      </div>
+      <div class="transport-center">
+        <button
+          id="rewind"
+          title="Play from beginning"
+          aria-label="Return to beginning"
+        >
+          ⏮</button
+        ><button
+          id="play"
+          class="play"
+          title="Play / stop (Space)"
+          aria-label="Play"
+        >
+          ▶</button
+        ><button
+          id="loop"
+          title="Loop selected section"
+          aria-label="Loop selected section"
+        >
+          ↻</button
+        ><span class="transport-divider"></span
+        ><label class="tempo-control"
+          ><input
+            id="tempo"
+            type="number"
+            min="20"
+            max="300"
+            value="88"
+            aria-label="Base tempo"
+          />
+          <span>BPM</span></label
+        ><button
+          id="metronome"
+          title="Toggle metronome"
+          aria-label="Toggle metronome"
+        >
+          ♩
+        </button>
+      </div>
+      <div class="transport-right">
+        <select id="master-tone" aria-label="Default instrument tone">
+          <option value="steel">Steel-string acoustic</option>
+          <option value="nylon">Nylon-string classical</option>
+          <option value="warm">Warm fingerstyle</option>
+          <option value="bright">Bright acoustic</option>
+          <option value="bow">Bowed strings</option></select
+        ><label title="Master volume"
+          ><span>◖</span
+          ><input
+            id="volume"
+            type="range"
+            min="0"
+            max="100"
+            value="70"
+            aria-label="Master volume"
+        /></label>
+      </div>
+    </footer>
+    <dialog id="modal">
+      <div class="modal-header">
+        <h2 id="modal-title"></h2>
+        <button id="modal-close" aria-label="Close dialog">×</button>
+      </div>
+      <div id="modal-body"></div>
+    </dialog>
+    <input hidden type="file" id="import-file" />
+    <div class="toast" id="toast" role="status"></div>
+  </body>
+</html>

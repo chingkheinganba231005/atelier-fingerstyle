@@ -1,0 +1,12 @@
+{
+  "name": "atelier-fingerstyle",
+  "version": "1.1.0",
+  "private": true,
+  "description": "A local-first fingerstyle guitar notation and tablature editor",
+  "scripts": {
+    "test": "node --test tests/editor.test.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}

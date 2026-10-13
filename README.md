@@ -1,60 +1,64 @@
 # Atelier — Fingerstyle Studio
 
-A browser-based guitar score editor with standard notation above six-string tablature. This is the exact app release with tuning dropdowns, semitone buttons, and per-note natural guitar sounds underneath bowed chopstick sections.
+A quiet workspace for writing expressive guitar music. Standard notation sits above six-string tablature, with the details of fingerstyle playing close at hand.
 
-## Launch on GitHub Pages — no build or API keys
+**[Open Atelier](https://chingkheinganba231005.github.io/atelier-fingerstyle/)**
 
-1. Visit https://github.com/new and select the GitHub account you want to own the app.
-2. Name the repository `atelier-fingerstyle`, choose **Public**, and enable **Add README**. Create the repository.
-3. Extract the downloaded ZIP. In the repository, choose **Add file → Upload files**. Upload the extracted files and the complete `fonts` and `licenses` folders. Upload the CONTENTS, not the ZIP and not an enclosing folder. `index.html` must be at the repository root, beside `app.js` and `style.css`. Commit the upload to `main`. The packaged README can replace the initial README.
-4. Go to **Settings → Pages**. Under **Build and deployment**, choose **Deploy from a branch**, then **main** and **/(root)**. Click **Save**.
-5. Wait for the Pages deployment to finish. GitHub displays the live URL in Settings → Pages. For a repository named `atelier-fingerstyle`, its usual form is `https://YOUR-USERNAME.github.io/atelier-fingerstyle/`.
+## Write and arrange
 
-The ZIP includes `.nojekyll` to disable Jekyll processing. If your file picker hides it, you may create an empty `.nojekyll` file at the repository root using **Add file → Create new file**. No custom GitHub Actions workflow is needed.
+- Standard notation and aligned six-string TAB, with vector PDF export.
+- Per-string tuning selectors, semitone controls, tuning presets and capo.
+- Whole through 64th notes, dotted rhythms, tuplets, changing meters and tempos.
+- Ties that extend previous notes into empty strings without repeating fret numbers in TAB.
+- Multi-string selection for techniques, harmonics, dynamics and sustain.
+- Fret entry by keyboard or plus/minus buttons.
+- Measures and sections with copy, paste, duplicate, rearrange and undo/redo.
+- Comments above and below the score.
 
-Official instructions: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
+## Shape the performance
 
-## Before moving an existing composition
+- Natural, artificial, pinch and tapped harmonics, including high and fractional touch points.
+- Hammer-ons, pull-offs, slides, legato slides, vibrato, staccato and palm muting.
+- Quiet grace notes, muted plucks, strum directions and left/right-hand tapping.
+- Slap bass (SB), nail attack (NA), wrist thump (WT) and bass wrist (BW) markings.
+- Let-ring enabled for new notes by default, with per-note control.
+- Balanced string dynamics, a 1–300 dynamics range and long-ringing harmonic synthesis.
+- Steel-string, nylon, warm, bright and bowed tones.
+- Natural guitar notes beneath bowed chopstick sections, with independent sustain.
+- A meter-aware metronome with first-beat accent, volume control and visible counting.
 
-In the original app, choose **Export → Atelier project** and download your composition. In the GitHub Pages app, choose **File → Import Atelier project**. Browser autosave belongs to each website origin, so it does not automatically transfer to the new URL. Importing your backup preserves the notes and settings.
+## Ties and multi-string editing
 
-## Features
+Select a beat, then tick the strings in the Note inspector. **All six** selects the whole chord. Desktop users can also Shift-click strings in the score.
 
-- Standard staff above six-string tablature, rendered with VexFlow.
-- Individual string pitch selectors and semitone controls, tuning presets and capo.
-- Tempo and meter changes, whole through 64th notes, dots and tuplets.
-- Harmonics, quiet grace notes, dead notes, tapping, slides, hammer-ons and pull-offs.
-- SB, NA, WT and BW percussion markings; strum direction and per-note sustain.
-- Steel-string, nylon, warm, bright and bowed synthesized sounds.
-- Per-note sound overrides: natural tapped bass can sustain below bowed treble.
-- Section and measure editing, undo/redo and browser autosave.
-- Embedded-font vector PDF, print output, MusicXML, and editable project backups.
+Choose **Tie** (or press **T**) to extend notes from the immediately preceding beat into the selected empty strings. Existing notes are left untouched. Across a barline, the preceding measure must be rhythmically complete. Dead notes cannot be tied.
 
-## Check your public demo
+Tied notes appear on the staff; their continuing TAB positions stay blank. Editing a tied note's effects changes the original attack. Editing its fret creates a new attack. **Remove ties** clears the selected continuations. Effects apply only to existing selected notes, not empty strings.
 
-- Open the live URL in a private/incognito window. The included demo should load without an account.
-- Press Play, then try a tuning dropdown and a semitone button under Guitar.
-- Select a bass note in a bowed measure. In Note, choose Natural guitar and enable Let this note ring.
-- Export a PDF and check that staff, frets and labels appear.
-- Export and reimport an Atelier project to check your backup workflow.
-- Test on the phone/tablet/browser you intend to support. Sound starts only after a user gesture such as Play.
+## Save and continue
 
-## Storage and hosting
+Atelier automatically saves the current score in the same browser on the same device. No sign-in is required, and visitors' scores are separate.
 
-No backend, database, account system or API keys are required. Each visitor edits their own browser-local score; visitors do not overwrite one another. Export backups for long-term storage or device transfer. The optional Google Fonts stylesheet enhances interface typography; fallback fonts are available. PDF fonts and application libraries are bundled locally.
+For a reliable backup or to change devices:
 
-All local assets use relative URLs, so the app works at a GitHub project subpath. Preserve the filenames and `fonts/` folder or PDF export will fail.
+1. Choose **File → Save project backup** or **Export → Atelier project**.
+2. Keep the downloaded `.atelier.json` file in Files, Drive or another folder.
+3. On any device, choose **File → Import Atelier project** and open that file.
 
-## Current limits
+Older `.atelier` and compatible `.json` backups still open. The file picker accepts any extension and checks the project's contents. PDF is for sharing and printing; the project backup is the editable original. Clearing browser storage or using private browsing can remove local progress. There is no automatic cross-device cloud sync.
 
-Playback is synthesis rather than recorded instrument samples. One rhythmic voice is engraved, with independent sustain per note. Native Guitar Pro import/export and independent simultaneous bass/melody rhythmic voices are not yet included. MusicXML preserves technical information where supported by the receiving notation program.
+## Export and compatibility
 
-## Local development
+PDFs include vector notation and embedded fonts. MusicXML export carries rhythm, string/fret information, ties and supported techniques into other notation software; interpretation varies by application. Native Guitar Pro files are not supported.
 
-Serve this directory over HTTP, for example with `python3 -m http.server 8080`, then visit `http://localhost:8080`. No install or build step is needed.
+Playback uses synthesized instruments rather than recorded samples. The editor has one rhythmic grid, with per-string ties and sustain; fully independent simultaneous rhythmic voices are not yet supported. Dynamics above 127 are Atelier's gain scale, not MIDI velocity.
 
-## Updating
+The interface adapts to desktop, tablet and phone, with drawn musical controls that do not depend on emoji fonts. On small screens, use **Edit** for the touch inspector and scroll the toolbar for more controls. Audio starts after pressing Play.
 
-Commit edited files to `main`. GitHub Pages republishes from the same root folder. There is no automatic synchronization with another hosted copy of Atelier; keep the desired release files in this repository.
+## Development
 
-Third-party license notices are in `licenses/`. Public hosting does not itself set a reuse license for the app's original source.
+Atelier is a static site with no server, account system or build step. Serve the repository over HTTP to run locally. GitHub Pages serves the repository root.
+
+For the regression suite, run `npm install` followed by `npm test` using Node.js 20 or later. Tests cover ties, batch editing, playback scheduling, harmonic envelopes, import compatibility, notation and PDF generation. Physical-device Safari/iPad testing remains important for release checks.
+
+Third-party notices are in [`licenses/`](licenses/). Application libraries and PDF fonts are bundled; interface typography uses Google Fonts with local fallback fonts.
