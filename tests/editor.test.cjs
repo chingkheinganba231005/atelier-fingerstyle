@@ -207,12 +207,12 @@ test("batch effects change only selected existing notes, new let-ring defaults a
   assert.equal(ev("currentEvent().notes.length"), 3);
   change("#harmonic", "natural");
   assert.equal(
-    ev("currentEvent().notes.filter(n=>n.harmonic && n.velocity===180).length"),
+    ev("currentEvent().notes.filter(n=>n.harmonic && n.velocity===127).length"),
     2,
   );
   assert.equal(ev("currentEvent().notes.find(n=>n.string===6).velocity"), 20);
-  change("#velocity", "275");
-  assert.equal(ev("currentEvent().notes[0].velocity"), 275);
+  change("#velocity", "195");
+  assert.equal(ev("currentEvent().notes[0].velocity"), 195);
   change("#sustain", false);
   assert.equal(ev("currentEvent().notes[0].sustain"), false);
   assert.equal(ev("currentEvent().notes[2].sustain"), true);
@@ -222,7 +222,7 @@ test("batch effects change only selected existing notes, new let-ring defaults a
   assert.equal(ev("note(1,0).sustain"), true);
   assert.equal(
     ev("validateProject(clone(project)).bars[0].events[0].notes[0].velocity"),
-    275,
+    195,
   );
 });
 
@@ -253,27 +253,82 @@ test("natural bass under bowed strings sustains independently, grace remains sof
   assert.ok(bass[1][2] > ev("timeline[0].duration"));
 });
 
-test("harmonic envelope stays audible for seconds and stops when requested", () => {
-  const data = ev("harmonicSamples(659.255, 8, 22050, true)");
-  const rms = (start) => {
-    const a = data.slice(start * 22050, (start + 0.1) * 22050);
-    return Math.sqrt(a.reduce((s, n) => s + n * n, 0) / a.length);
+test("harmonics use the original plucked buffer, normal sustain and the 200 ceiling", () => {
+  reset();
+  const buffers = [],
+    sources = [];
+  const parameter = () => ({
+    value: 0,
+    setValueAtTime() {},
+    exponentialRampToValueAtTime() {},
+  });
+  const mock = {
+    sampleRate: 22050,
+    createBuffer(channels, size) {
+      const data = new Float32Array(size);
+      buffers.push(data);
+      return { getChannelData: () => data };
+    },
+    createBufferSource() {
+      const source = {
+        connect() {},
+        start() {},
+        stop() {},
+        playbackRate: parameter(),
+      };
+      sources.push(source);
+      return source;
+    },
+    createGain: () => ({ connect() {}, gain: parameter() }),
+    createBiquadFilter: () => ({ connect() {}, frequency: parameter() }),
+    createOscillator() {
+      throw Error("Harmonics must not use the added oscillator sound");
+    },
   };
-  assert.ok(rms(4) > rms(0.1) * 0.5);
-  assert.equal(Math.abs(data.at(-1)), 0);
+  w.mockAudio = mock;
+  ev("window.savedAudio=audioCtx; audioCtx=window.mockAudio; voiceBus={};");
+  try {
+    for (const harmonic of ["natural", "artificial", "pinch", "tapped"]) {
+      ev(
+        `pluck(76, 0, 3, 127, "steel", {harmonic:"${harmonic}",fret:12,tech:[],sustain:true})`,
+      );
+    }
+    assert.equal(sources.length, 4);
+    assert.ok(buffers[0].some((value) => value !== 0));
+    const rms = (start) => {
+      const a = buffers[0].slice(start * 22050, (start + 0.1) * 22050);
+      return Math.sqrt(a.reduce((sum, n) => sum + n * n, 0) / a.length);
+    };
+    assert.ok(
+      rms(2) < rms(0) * 0.2,
+      "original plucked decay, no held synth envelope",
+    );
+  } finally {
+    ev("audioCtx=window.savedAudio;voiceBus=null;audioNodes=[];");
+  }
   reset(
-    'project=demo();project.bars=[bar({events:[event([note(1,12,{harmonic:"natural"})],4),event([note(6,0)],4),event([note(1,0)],4)]})]',
+    'project=demo();project.bars=[bar({events:[event([note(1,12,{harmonic:"natural"})],4)]})]',
   );
-  assert.ok(
+  assert.equal(ev("currentNote().velocity"), 127);
+  assert.equal(q("#velocity").max, "200");
+  assert.equal(
     ev(
-      "soundingDuration(buildTimeline().events,0,project.bars[0].events[0].notes[0],buildTimeline().duration) > buildTimeline().events[0].duration",
+      "soundingDuration(buildTimeline().events,0,currentNote(),buildTimeline().duration)",
+    ),
+    ev(
+      'soundingDuration(buildTimeline().events,0,{...currentNote(),harmonic:""},buildTimeline().duration)',
     ),
   );
-  ev('project.bars[0].events[0].notes[0].tech=["ST"]');
+  ev('currentNote().tech=["ST"]');
   assert.ok(
     ev(
-      "soundingDuration(buildTimeline().events,0,project.bars[0].events[0].notes[0],buildTimeline().duration) <= .16",
+      "soundingDuration(buildTimeline().events,0,currentNote(),buildTimeline().duration)<=.16",
     ),
+  );
+  ev("currentNote().velocity=275");
+  assert.equal(
+    ev("validateProject(clone(project)).bars[0].events[0].notes[0].velocity"),
+    200,
   );
 });
 

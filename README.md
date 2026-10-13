@@ -22,7 +22,7 @@ A quiet workspace for writing expressive guitar music. Standard notation sits ab
 - Quiet grace notes, muted plucks, strum directions and left/right-hand tapping.
 - Slap bass (SB), nail attack (NA), wrist thump (WT) and bass wrist (BW) markings.
 - Let-ring enabled for new notes by default, with per-note control.
-- Balanced string dynamics, a 1–300 dynamics range and long-ringing harmonic synthesis.
+- Balanced string dynamics, a 1–200 dynamics range and the original plucked harmonic sound. New harmonics start at 127; normal notes start at 20, 30, 45, 65, 85 and 100 from the lowest string to the highest.
 - Steel-string, nylon, warm, bright and bowed tones.
 - Natural guitar notes beneath bowed chopstick sections, with independent sustain.
 - A meter-aware metronome with first-beat accent, volume control and visible counting.
@@ -59,6 +59,6 @@ The interface adapts to desktop, tablet and phone, with drawn musical controls t
 
 Atelier is a static site with no server, account system or build step. Serve the repository over HTTP to run locally. GitHub Pages serves the repository root.
 
-For the regression suite, run `npm install` followed by `npm test` using Node.js 20 or later. Tests cover ties, batch editing, playback scheduling, harmonic envelopes, import compatibility, notation and PDF generation. Physical-device Safari/iPad testing remains important for release checks.
+For the regression suite, run `npm install` followed by `npm test` using Node.js 20 or later. Tests cover ties, batch editing, playback scheduling, harmonic playback, import compatibility, notation and PDF generation. Physical-device Safari/iPad testing remains important for release checks.
 
 Third-party notices are in [`licenses/`](licenses/). Application libraries and PDF fonts are bundled; interface typography uses Google Fonts with local fallback fonts.

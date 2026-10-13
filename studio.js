@@ -232,9 +232,9 @@ function enhanceInspector() {
   const velocity = $("#velocity");
   if (ns.some((n) => n.velocity !== ns[0]?.velocity))
     velocity.previousElementSibling.textContent =
-      "Note dynamics · mixed (1–300)";
+      "Note dynamics · mixed (1–200)";
   velocity.oninput = () =>
-    (velocity.previousElementSibling.textContent = `Note dynamics · ${velocity.value}/300`);
+    (velocity.previousElementSibling.textContent = `Note dynamics · ${velocity.value}/200`);
   $("#audition-chord").innerHTML = icon("play") + " Audition this chord";
 }
 
@@ -378,62 +378,10 @@ function soundingDuration(items, index, n, end) {
   }
   if (n.sustain)
     duration =
-      nextAttack ??
-      Math.max(duration, Math.min(18, end - item.time + (n.harmonic ? 8 : 3)));
+      nextAttack ?? Math.max(duration, Math.min(18, end - item.time + 3));
   if (n.tech.some((t) => ["PM", "ST"].includes(t)))
     duration = Math.min(duration, item.duration * 0.45, 0.16);
   return Math.max(0.045, duration);
-}
-
-function harmonicSamples(hz, duration, rate, ringing) {
-  const data = new Float32Array(Math.ceil((duration + 0.08) * rate));
-  const decay = ringing ? 9 : 2.5;
-  for (let i = 0; i < data.length; i++) {
-    const t = i / rate,
-      phase = 2 * Math.PI * hz * t;
-    const attack = Math.min(1, t / 0.008);
-    const release = Math.max(0, Math.min(1, (duration + 0.04 - t) / 0.06));
-    let sample = Math.sin(phase);
-    if (hz * 2 < rate / 2)
-      sample += 0.3 * Math.sin(phase * 2) * Math.exp(-t / 3);
-    if (hz * 3 < rate / 2)
-      sample += 0.12 * Math.sin(phase * 3) * Math.exp(-t / 1.5);
-    data[i] = sample * 0.64 * attack * release * Math.exp(-t / decay);
-  }
-  return data;
-}
-
-function playHarmonic(hz, t, duration, amp, n) {
-  // Additive partials avoid the rapid high-frequency loss of a delay-line pluck.
-  // Oscillators also let long ties ring without allocating huge audio buffers.
-  const decay = n.sustain ? 9 : 2.5;
-  for (const [multiple, level, extraDecay] of [
-    [1, 0.64, 0],
-    [2, 0.192, 1 / 3],
-    [3, 0.0768, 1 / 1.5],
-  ]) {
-    if (hz * multiple >= audioCtx.sampleRate / 2) continue;
-    const source = audioCtx.createOscillator(),
-      gain = audioCtx.createGain();
-    source.type = "sine";
-    source.frequency.value = hz * multiple;
-    const peak = amp * 0.9 * level;
-    gain.gain.setValueAtTime(0, t);
-    gain.gain.linearRampToValueAtTime(peak, t + 0.008);
-    gain.gain.exponentialRampToValueAtTime(
-      Math.max(
-        0.0000001,
-        peak * Math.exp(-duration * (1 / decay + extraDecay)),
-      ),
-      t + Math.max(0.009, duration - 0.02),
-    );
-    gain.gain.linearRampToValueAtTime(0, t + duration + 0.04);
-    source.connect(gain);
-    gain.connect(voiceBus);
-    source.start(t);
-    source.stop(t + duration + 0.06);
-    audioNodes.push(source);
-  }
 }
 
 function updateZoom() {

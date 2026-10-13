@@ -58,7 +58,7 @@ const note = (string, fret, extras = {}) => ({
   tech: [],
   harmonic: "",
   grace: null,
-  velocity: extras.harmonic ? 180 : STRING_DYNAMICS[string - 1],
+  velocity: extras.harmonic ? 127 : STRING_DYNAMICS[string - 1],
   tone: "",
   ...extras,
 });
@@ -271,6 +271,8 @@ function validateProject(p) {
           (n.tie !== undefined && typeof n.tie !== "boolean")
         )
           throw Error("Invalid note.");
+        // Open backups from the previous 1–300 range without losing the score.
+        n.velocity = Math.min(200, n.velocity);
         if (
           n.grace !== null &&
           n.grace !== undefined &&
@@ -548,7 +550,7 @@ function renderInspector() {
       "number",
       'min="0" max="24" placeholder="None"',
     );
-    h += `<label class="field"><span>Note dynamics · ${n?.velocity ?? STRING_DYNAMICS[selection.string - 1]}/300</span><input id="velocity" type="range" min="1" max="300" value="${n?.velocity ?? STRING_DYNAMICS[selection.string - 1]}"></label>`;
+    h += `<label class="field"><span>Note dynamics · ${n?.velocity ?? STRING_DYNAMICS[selection.string - 1]}/200</span><input id="velocity" type="range" min="1" max="200" value="${n?.velocity ?? STRING_DYNAMICS[selection.string - 1]}"></label>`;
     h += selectField(
       "Strum direction · entire chord",
       "strum",
@@ -739,7 +741,7 @@ function bindInspector() {
   on("harmonic", "change", (ev) =>
     change(() => {
       selectedNotes().forEach((n) => {
-        if (ev.target.value && !n.harmonic) n.velocity = 180;
+        if (ev.target.value && !n.harmonic) n.velocity = 127;
         n.harmonic = ev.target.value;
         if (!n.harmonic && n.fret !== "x")
           n.fret = Math.min(24, Math.round(n.fret));
@@ -838,9 +840,7 @@ function bindInspector() {
           pitchOf(n),
           t,
           n.sustain
-            ? n.harmonic
-              ? 8
-              : 3
+            ? 3
             : Math.max(0.3, (beats(e) * 60) / settingsAt(selection.bar).tempo),
           n.velocity,
           noteTone(n, settingsAt(selection.bar)),
@@ -1600,14 +1600,7 @@ function audioInit() {
   audioCtx = new AC();
   master = audioCtx.createGain();
   master.gain.value = (+$("#volume").value / 100) * 0.65;
-  const limiter = audioCtx.createDynamicsCompressor();
-  limiter.threshold.value = -8;
-  limiter.knee.value = 6;
-  limiter.ratio.value = 8;
-  limiter.attack.value = 0.003;
-  limiter.release.value = 0.2;
-  master.connect(limiter);
-  limiter.connect(audioCtx.destination);
+  master.connect(audioCtx.destination);
   voiceBus = audioCtx.createGain();
   voiceBus.gain.value = 0.75;
   voiceBus.connect(master);
@@ -1670,10 +1663,6 @@ function pluck(midi, t, duration, velocity, tone, n = {}, slideFrom = null) {
   const amp = (velocity / 127) * 0.3;
   if (n.fret === "x") {
     noise(t, 0.1, amp * 1.5, 900, "dead");
-    return;
-  }
-  if (n.harmonic && tone !== "bow") {
-    playHarmonic(hz, t, duration, amp, n);
     return;
   }
   if (tone === "bow") {
@@ -2315,7 +2304,7 @@ function exportDialog() {
 function helpDialog() {
   modal(
     "A place for every technique.",
-    `<div class="help-content"><p>Click a number in the tab, then edit its fret in the inspector. To build a chord, enter frets on several strings in the same beat. An empty string is silent; <b>x</b> is a muted pluck.</p><h3>Write at your own pace</h3><p>Select a rhythm in the toolbar. <b>+ Note</b> or <b>Rest</b> inserts a beat after your selection. The dot button cycles single, double and no dot. Triplets use three notes in the time of two; enter all notes in the group. Choose Measure to check how much time is filled.</p><table><tr><td>← →</td><td>Previous / next beat</td></tr><tr><td>↑ ↓</td><td>Change selected string</td></tr><tr><td>0–9 / X</td><td>Type a fret or dead note</td></tr><tr><td>Enter / R</td><td>Insert a note / rest</td></tr><tr><td>Delete</td><td>Remove selected string’s note</td></tr><tr><td>Space</td><td>Play / stop</td></tr><tr><td>⌘ / Ctrl Z</td><td>Undo (Shift to redo)</td></tr></table><h3>Select strings and extend notes</h3><p>Tick the string checkboxes or choose <b>All six</b> to apply effects to several existing notes. Shift-click also selects strings on desktop. Choose <b>Tie</b> or press <b>T</b> to sustain the immediately preceding notes into selected empty strings. Occupied strings are skipped. The staff shows the tied continuation; TAB leaves it blank. Fill the preceding measure before tying across a barline. Use <b>Remove ties</b> to clear continuations.</p><h3>Your fingerstyle vocabulary</h3><p><b>SB</b>: your thumb strike on the bass string plus a deep body hit. <b>WT</b>: a simultaneous wrist thump. <b>BW</b>: bass wrist percussion. <b>NA</b>: a bright nail attack. <b>LH / RH</b>: left- or right-hand tapping. Labels with a number in parentheses identify the string in a chord.</p><p><b>H / P / slides / LS (legato slide)</b> connect to the next beat on the same string. <b>NH</b> uses the touched fret and nearest standard harmonic node; AH, PH and TH use the fretted pitch plus the selected harmonic interval. Grace notes play at one quarter of the main note’s velocity.</p><h3>Let it breathe</h3><p><b>Let new notes ring by default</b> starts enabled. Uncheck <b>Let selected notes ring</b> to stop particular notes at their written duration. <b>ST</b> makes notes staccato. Note dynamics range from 1 to 300; new bass notes start softly and harmonics start at 180. Replaying a string replaces its previous sound.</p><h3>Chopstick sections</h3><p>In Measure, choose <b>Bowed strings</b>. Add your section comment. Set a guitar tone in a later measure to return to plucking. Tempo, meter and sound changes continue until the next change. To keep bass notes natural beneath bowed treble notes, select the bass string in Note and set <b>Sound · selected notes → Natural guitar</b>. Add <b>LH</b> for tapping and enable <b>Let selected notes ring</b> to sustain it. The override affects only that note, including its grace note. <b>nat.</b> on the score marks a natural-guitar override.</p><h3>Keep time</h3><p>Toggle the metronome beside BPM. Its settings control the first-beat accent and click volume. The counter follows the time signature, including meter changes; 6/8 has six eighth-note clicks. BPM always means quarter notes per minute.</p><h3>Keep your work</h3><p>Autosave stays in this browser. Export an <b>Atelier project (.atelier.json)</b> for backups or transfer to another device. Older .atelier files still open. There is no automatic cloud sync. PDF is the faithful engraved output. MusicXML includes pitch, rhythm, strings and technique text; custom technique support varies between notation apps.</p><p class="notice">Playback uses synthesized plucked strings, percussion and bowed tones, not recorded guitar samples. This version uses one rhythmic voice with per-note sustain. Independent simultaneous bass and melody rhythms and native .gp files are not yet supported.</p></div>`,
+    `<div class="help-content"><p>Click a number in the tab, then edit its fret in the inspector. To build a chord, enter frets on several strings in the same beat. An empty string is silent; <b>x</b> is a muted pluck.</p><h3>Write at your own pace</h3><p>Select a rhythm in the toolbar. <b>+ Note</b> or <b>Rest</b> inserts a beat after your selection. The dot button cycles single, double and no dot. Triplets use three notes in the time of two; enter all notes in the group. Choose Measure to check how much time is filled.</p><table><tr><td>← →</td><td>Previous / next beat</td></tr><tr><td>↑ ↓</td><td>Change selected string</td></tr><tr><td>0–9 / X</td><td>Type a fret or dead note</td></tr><tr><td>Enter / R</td><td>Insert a note / rest</td></tr><tr><td>Delete</td><td>Remove selected string’s note</td></tr><tr><td>Space</td><td>Play / stop</td></tr><tr><td>⌘ / Ctrl Z</td><td>Undo (Shift to redo)</td></tr></table><h3>Select strings and extend notes</h3><p>Tick the string checkboxes or choose <b>All six</b> to apply effects to several existing notes. Shift-click also selects strings on desktop. Choose <b>Tie</b> or press <b>T</b> to sustain the immediately preceding notes into selected empty strings. Occupied strings are skipped. The staff shows the tied continuation; TAB leaves it blank. Fill the preceding measure before tying across a barline. Use <b>Remove ties</b> to clear continuations.</p><h3>Your fingerstyle vocabulary</h3><p><b>SB</b>: your thumb strike on the bass string plus a deep body hit. <b>WT</b>: a simultaneous wrist thump. <b>BW</b>: bass wrist percussion. <b>NA</b>: a bright nail attack. <b>LH / RH</b>: left- or right-hand tapping. Labels with a number in parentheses identify the string in a chord.</p><p><b>H / P / slides / LS (legato slide)</b> connect to the next beat on the same string. <b>NH</b> uses the touched fret and nearest standard harmonic node; AH, PH and TH use the fretted pitch plus the selected harmonic interval. Grace notes play at one quarter of the main note’s velocity.</p><h3>Let it breathe</h3><p><b>Let new notes ring by default</b> starts enabled. Uncheck <b>Let selected notes ring</b> to stop particular notes at their written duration. <b>ST</b> makes notes staccato. Note dynamics range from 1 to 200; new bass notes start at 20, upper strings progressively louder, and harmonics at 127. Replaying a string replaces its previous sound.</p><h3>Chopstick sections</h3><p>In Measure, choose <b>Bowed strings</b>. Add your section comment. Set a guitar tone in a later measure to return to plucking. Tempo, meter and sound changes continue until the next change. To keep bass notes natural beneath bowed treble notes, select the bass string in Note and set <b>Sound · selected notes → Natural guitar</b>. Add <b>LH</b> for tapping and enable <b>Let selected notes ring</b> to sustain it. The override affects only that note, including its grace note. <b>nat.</b> on the score marks a natural-guitar override.</p><h3>Keep time</h3><p>Toggle the metronome beside BPM. Its settings control the first-beat accent and click volume. The counter follows the time signature, including meter changes; 6/8 has six eighth-note clicks. BPM always means quarter notes per minute.</p><h3>Keep your work</h3><p>Autosave stays in this browser. Export an <b>Atelier project (.atelier.json)</b> for backups or transfer to another device. Older .atelier files still open. There is no automatic cloud sync. PDF is the faithful engraved output. MusicXML includes pitch, rhythm, strings and technique text; custom technique support varies between notation apps.</p><p class="notice">Playback uses synthesized plucked strings, percussion and bowed tones, not recorded guitar samples. This version uses one rhythmic voice with per-note sustain. Independent simultaneous bass and melody rhythms and native .gp files are not yet supported.</p></div>`,
   );
 }
 $("#durations").onclick = (e) => {
